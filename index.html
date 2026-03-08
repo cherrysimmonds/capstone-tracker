@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Capstone Tracker — Cherry Simmonds</title>
+  <meta name="description" content="TechNative AI for Business 2026 · From Data Burden to Data Brilliance" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Capstone Tracker" />
+  <meta name="theme-color" content="#9b3f95" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    body { font-family: "Trebuchet MS", Trebuchet, Arial, sans-serif; background: #f6f7f9; }
+    #root { min-height: 100vh; }
+    #loading { display: flex; align-items: center; justify-content: center; height: 100vh; color: #737B82; font-size: 14px; font-family: "Trebuchet MS", sans-serif; }
+  </style>
+</head>
+<body>
+  <div id="root"><div id="loading">Loading your tracker…</div></div>
+
+  <!-- React + Babel from CDN — no build step needed -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback } = React;
+
+    // ─── IL Design System Colours ─────────────────────────────────────────────
+    const C = {
+      purple:    "#B456AE",
+      purple700: "#9b3f95",
+      purple200: "#efd3ed",
+      purple100: "#faf0f9",
+      grey:      "#737B82",
+      grey200:   "#e3e6e9",
+      grey100:   "#f3f4f6",
+      ink:       "#1f2328",
+      surface:   "#f6f7f9",
+      white:     "#ffffff",
+      border:    "#d7dbe0",
+      success:   "#0b7a4b",
+      successBg: "#f0faf5",
+      warning:   "#8a5a00",
+      warningBg: "#fffbeb",
+      danger:    "#b42318",
+      dangerBg:  "#fef2f2",
+      info:      "#0b5cad",
+      infoBg:    "#eff6ff",
+      gold:      "#b45309",
+      goldBg:    "#fffbeb",
+    };
+
+    // ─── Capstone Session Data ────────────────────────────────────────────────
+    const SESSIONS = [
+      {
+        id: 1,
+        title: "Session 1",
+        subtitle: "Statement of intent & opportunity analysis",
+        date: "Week 8",
+        color: C.info,
+        milestones: [
+          { id: "1a", text: "Statement of intent written, reviewed and finalised" },
+          { id: "1b", text: "AI opportunity analysis framed — current state + opportunity map" },
+          { id: "1g", text: "At least one AI claim about your sector or organisation independently verified — explicitly confirmed or corrected in the analysis with real evidence" },
+          { id: "1c", text: "Proof-of-concept local authority identified and scoped" },
+          { id: "1d", text: "Stakeholder map drafted (internal approvers + LA contact)" },
+          { id: "1e", text: "Capstone schedule created with realistic weekly commitments" },
+          { id: "1f", text: "Tracker app (v1) built, running, and screenshot saved" },
+        ],
+      },
+      {
+        id: 2,
+        title: "Session 2",
+        subtitle: "Proof of concept design & build",
+        date: "Target: before 1 April 2026",
+        color: C.purple,
+        milestones: [
+          { id: "2a", text: "KPI list for proof-of-concept LA confirmed and mapped to data fields" },
+          { id: "2b", text: "Single master dataset structure designed (one source → 3 authority views)" },
+          { id: "2c", text: "Filtering logic designed to handle LA output differences without rebuilding" },
+          { id: "2d", text: "Automation/reporting tool selected — Power BI, Python, or other; rationale documented" },
+          { id: "2e", text: "Proof-of-concept automated report produced, tested, and reviewed" },
+          { id: "2f", text: "Employer engagement conversation held and recorded as evidence" },
+        ],
+      },
+      {
+        id: 3,
+        title: "Session 3",
+        subtitle: "Full plan, reflection & submission",
+        date: "Week 10 — Final session",
+        color: C.success,
+        milestones: [
+          { id: "3a", text: "Implementation plan extended to all 3 local authorities" },
+          { id: "3b", text: "Risk assessment written — honest about failure modes, not a formality" },
+          { id: "3c", text: "Decision points documented: if X works → do Y; if it doesn't → do Z" },
+          { id: "3d", text: "Process reflection written (500 words max) covering AI override moments" },
+          { id: "3e", text: "AI conversation evidence selected (3–5 conversations) and named correctly" },
+          { id: "3f", text: "All components checked against distinction criteria before submission" },
+        ],
+      },
+    ];
+
+    // ─── TechNative Milestones (from Learner Handbook) ────────────────────────
+    const TECH_MILESTONES = [
+      {
+        id: "m2",
+        badge: "Milestone 2",
+        title: "Bootcamp Completion",
+        subtitle: "Must be achieved by Week 12",
+        color: C.purple,
+        urgent: true,
+        description:
+          "Employed / Co-funded route: you must be offered new responsibilities in your current role. The capstone project is your Assessment 2 evidence.",
+        tasks: [
+          { id: "m2c", text: "Assessment 2 (Capstone) submitted via Google Classroom" },
+          { id: "m2d", text: "Assessment 2 graded — Pass, Merit, or Distinction received" },
+          { id: "m2e", text: "Formal conversation with employer about new responsibilities completed" },
+          { id: "m2f", text: "New responsibilities confirmed or offered in writing by employer" },
+          { id: "m2g", text: "Exit ILP Review completed with LSM — Milestone 2 signed off" },
+        ],
+      },
+      {
+        id: "m3",
+        badge: "Milestone 3",
+        title: "Final Progression in Work",
+        subtitle: "Tracked in the 6 months after the bootcamp",
+        color: C.success,
+        urgent: false,
+        description:
+          "Starting new responsibilities at Independent Lives. TechNative tracks this after the course ends — it is the final measure of your progression.",
+        tasks: [
+          { id: "m3a", text: "Capstone proposal formally presented to line manager / employer" },
+          { id: "m3b", text: "New responsibilities officially started at Independent Lives" },
+          { id: "m3c", text: "Evidence of progression documented for TechNative records" },
+          { id: "m3d", text: "Post-bootcamp check-in with TechNative team scheduled (within 6 months)" },
+          { id: "m3e", text: "Progression confirmed and submitted to TechNative" },
+        ],
+      },
+    ];
+
+    // ─── Submission Components ────────────────────────────────────────────────
+    const COMPONENTS = [
+      {
+        id: "c1", label: "AI opportunity analysis",
+        filename: "Capstone_AIOpportunityAnalysis_CherrySimmonds",
+        required: true,
+        hint: "4–6 pages. Current state, opportunity map, and prioritisation. Must be specific to Independent Lives — not generic.",
+      },
+      {
+        id: "c2", label: "Proposal and implementation plan",
+        filename: "Capstone_Proposal_CherrySimmonds",
+        required: true,
+        hint: "4–8 pages. Phased plan, honest risks, resource requirements, decision points. Reads like a professional document.",
+      },
+      {
+        id: "c3", label: "Process and reflection",
+        filename: "Capstone_ProcessReflection_CherrySimmonds",
+        required: true,
+        hint: "500 words max. AI conversation evidence + 'Where I overrode AI' section. This is your distinction evidence.",
+      },
+      {
+        id: "c4", label: "Employer engagement evidence",
+        filename: "Capstone_EmployerEvidence_CherrySimmonds",
+        required: false,
+        hint: "Conversation records, confirmation email, or a follow-up plan. Shows the proposal left the classroom.",
+      },
+      {
+        id: "c5", label: "Tracker app",
+        filename: "Capstone_TrackerApp_CherrySimmonds",
+        required: false,
+        hint: "Screenshot + link + half-page explanation: what it tracks, design choices, and what changed from v1 to final.",
+      },
+      {
+        id: "c6", label: "Capstone schedule",
+        filename: "Capstone_Schedule_CherrySimmonds",
+        required: false,
+        hint: "The schedule you started with and how you adjusted it as reality hit. Honesty is valued.",
+      },
+      {
+        id: "c7", label: "AI conversations folder",
+        filename: "Capstone_AIConversations_CherrySimmonds",
+        required: false,
+        hint: "3–5 conversations. Name each: Capstone_AIConversation_[Topic]_CherrySimmonds",
+      },
+    ];
+
+    // ─── Distinction Criteria ─────────────────────────────────────────────────
+    const DISTINCTION = [
+      { id: "d1",  cat: "Analysis",    text: "Analysis addresses its own limitations — not just strengths and opportunities" },
+      { id: "d2",  cat: "Analysis",    text: "At least one AI claim independently verified with real external evidence" },
+      { id: "d3",  cat: "Analysis",    text: "Opportunities are specific: named processes, real time costs, identified stakeholders" },
+      { id: "d4",  cat: "Proposal",    text: "Risk assessment is honest about what could genuinely go wrong — not a formality" },
+      { id: "d5",  cat: "Proposal",    text: "Implementation plan has explicit decision points: if X → Y; if X fails → Z" },
+      { id: "d6",  cat: "Proposal",    text: "Impact considered beyond your own role — team, department, organisational position" },
+      { id: "d7",  cat: "Proposal",    text: "Proposal anticipates your manager's likely objections and addresses them directly" },
+      { id: "d8",  cat: "Reflection",  text: "Reflection shows specific moments where you overrode AI with insider knowledge" },
+      { id: "d9",  cat: "Reflection",  text: "Reflection shows where AI challenged your assumptions and you changed your thinking" },
+      { id: "d10", cat: "Reflection",  text: "AI conversations show genuine iteration — you pushed back, not just accepted outputs" },
+      { id: "d11", cat: "Overall",     text: "Manager would read this and recognise the organisation it describes" },
+      { id: "d12", cat: "Overall",     text: "All components reinforce each other and tell the same story" },
+    ];
+
+    const STATUS_OPS = ["Not started", "In progress", "Done"];
+    const STATUS_COLOR  = { "Not started": C.grey,    "In progress": C.warning,  "Done": C.success };
+    const STATUS_BG     = { "Not started": C.grey100, "In progress": C.warningBg, "Done": C.successBg };
+    const STATUS_BORDER = { "Not started": C.grey200, "In progress": "#fde68a",   "Done": "#a7f3d0" };
+
+    // ─── Persistent Storage (localStorage only — works everywhere) ────────────
+    function sGet(key) {
+      try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; } catch { return null; }
+    }
+    function sSet(key, val) {
+      try { localStorage.setItem(key, JSON.stringify(val)); } catch {}
+    }
+
+    // ─── Sub-components ───────────────────────────────────────────────────────
+
+    function Ring({ value, max, size = 68, stroke = 7, color = C.purple }) {
+      const r = (size - stroke) / 2;
+      const circ = 2 * Math.PI * r;
+      const pct = max > 0 ? value / max : 0;
+      const offset = circ * (1 - pct);
+      return (
+        <svg width={size} height={size} style={{ display: "block" }}>
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth={stroke} />
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+            strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
+            transform={`rotate(-90 ${size/2} ${size/2})`}
+            style={{ transition: "stroke-dashoffset 0.5s ease" }}
+          />
+          <text x={size/2} y={size/2 - 5} textAnchor="middle" dominantBaseline="central"
+            style={{ fontSize: size/4.2, fontWeight: 700, fill: color, fontFamily: "Trebuchet MS, sans-serif" }}>
+            {Math.round(pct * 100)}%
+          </text>
+          <text x={size/2} y={size/2 + 10} textAnchor="middle" dominantBaseline="central"
+            style={{ fontSize: size/7, fill: color, fontFamily: "Trebuchet MS, sans-serif", opacity: 0.8 }}>
+            {value}/{max}
+          </text>
+        </svg>
+      );
+    }
+
+    function MiniRing({ value, max, size = 48, stroke = 5, color = C.purple }) {
+      const r = (size - stroke) / 2;
+      const circ = 2 * Math.PI * r;
+      const pct = max > 0 ? value / max : 0;
+      const offset = circ * (1 - pct);
+      return (
+        <svg width={size} height={size} style={{ display: "block", flexShrink: 0 }}>
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={C.grey200} strokeWidth={stroke} />
+          <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={stroke}
+            strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
+            transform={`rotate(-90 ${size/2} ${size/2})`}
+            style={{ transition: "stroke-dashoffset 0.5s ease" }}
+          />
+          <text x={size/2} y={size/2} textAnchor="middle" dominantBaseline="central"
+            style={{ fontSize: size/4, fontWeight: 700, fill: color, fontFamily: "Trebuchet MS, sans-serif" }}>
+            {Math.round(pct * 100)}%
+          </text>
+        </svg>
+      );
+    }
+
+    function Tick({ checked, color = C.success }) {
+      return (
+        <div style={{
+          width: 22, height: 22, minWidth: 22, borderRadius: 6,
+          border: `2px solid ${checked ? color : C.grey200}`,
+          background: checked ? color : C.white,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          transition: "all 0.15s",
+        }}>
+          {checked && (
+            <svg width="12" height="10" viewBox="0 0 12 10">
+              <polyline points="1,5 4.5,8.5 11,1" fill="none" stroke="#fff" strokeWidth="2.2"
+                strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </div>
+      );
+    }
+
+    function Pill({ label, color }) {
+      return (
+        <span style={{
+          display: "inline-block", padding: "2px 9px", borderRadius: 999,
+          fontSize: 10, fontWeight: 700, letterSpacing: "0.3px",
+          background: color + "18", color: color, border: `1px solid ${color}35`,
+        }}>
+          {label}
+        </span>
+      );
+    }
+
+    function ProgressBar({ value, max, color }) {
+      const pct = max > 0 ? (value / max) * 100 : 0;
+      return (
+        <div style={{ background: C.grey200, borderRadius: 4, height: 5, marginTop: 10 }}>
+          <div style={{ background: color, borderRadius: 4, height: 5, width: `${pct}%`, transition: "width 0.4s ease" }} />
+        </div>
+      );
+    }
+
+    // ─── Main App ─────────────────────────────────────────────────────────────
+
+    function CapstoneTracker() {
+      const [msStatus,   setMsStatus]   = useState(() => sGet("ct2_ms")   || {});
+      const [techStatus, setTechStatus] = useState(() => sGet("ct2_tech") || {});
+      const [compStatus, setCompStatus] = useState(() => sGet("ct2_comp") || {});
+      const [distStatus, setDistStatus] = useState(() => sGet("ct2_dist") || {});
+      const [decisions,  setDecisions]  = useState(() => sGet("ct2_dec")  || []);
+      const [form,       setForm]       = useState({ context: "", aiSuggested: "", iChose: "", why: "" });
+      const [tab,        setTab]        = useState("overview");
+      const [saving,     setSaving]     = useState(false);
+      const [expanded,   setExpanded]   = useState(null);
+
+      const persist = useCallback((key, val) => {
+        setSaving(true);
+        sSet(key, val);
+        setTimeout(() => setSaving(false), 600);
+      }, []);
+
+      const toggleMs   = id => { const u = { ...msStatus,   [id]: !msStatus[id]   }; setMsStatus(u);   persist("ct2_ms",   u); };
+      const toggleTech = id => { const u = { ...techStatus, [id]: !techStatus[id] }; setTechStatus(u); persist("ct2_tech", u); };
+      const toggleDist = id => { const u = { ...distStatus, [id]: !distStatus[id] }; setDistStatus(u); persist("ct2_dist", u); };
+      const cycleCom   = id => {
+        const curr = compStatus[id] || "Not started";
+        const next = STATUS_OPS[(STATUS_OPS.indexOf(curr) + 1) % STATUS_OPS.length];
+        const u = { ...compStatus, [id]: next }; setCompStatus(u); persist("ct2_comp", u);
+      };
+      const addDecision = () => {
+        if (!form.context.trim()) return;
+        const u = [...decisions, { ...form, id: Date.now(), date: new Date().toLocaleDateString("en-GB") }];
+        setDecisions(u); persist("ct2_dec", u);
+        setForm({ context: "", aiSuggested: "", iChose: "", why: "" });
+      };
+      const removeDecision = id => { const u = decisions.filter(d => d.id !== id); setDecisions(u); persist("ct2_dec", u); };
+
+      // ── Computed stats ──────────────────────────────────────────────────────
+      const allMs    = SESSIONS.flatMap(s => s.milestones);
+      const doneMs   = allMs.filter(m => msStatus[m.id]).length;
+      const allTech  = TECH_MILESTONES.flatMap(m => m.tasks);
+      const doneTech = allTech.filter(t => techStatus[t.id]).length;
+      const doneComp = COMPONENTS.filter(c => (compStatus[c.id] || "Not started") === "Done").length;
+      const doneDist = DISTINCTION.filter(d => distStatus[d.id]).length;
+      const coreReq  = COMPONENTS.filter(c => c.required);
+      const coreDone = coreReq.filter(c => (compStatus[c.id] || "Not started") === "Done").length;
+      const suppReq  = COMPONENTS.filter(c => !c.required);
+      const suppDone = suppReq.filter(c => (compStatus[c.id] || "Not started") === "Done").length;
+      const totalAll = allMs.length + allTech.length + COMPONENTS.length + DISTINCTION.length;
+      const doneAll  = doneMs + doneTech + doneComp + doneDist;
+
+      const deadline = new Date("2026-04-01");
+      const today    = new Date();
+      const daysLeft = Math.ceil((deadline - today) / 86400000);
+
+      function gradeEst() {
+        if (coreDone < coreReq.length)                                         return { label: "Fail risk",        color: C.danger  };
+        if (suppDone < suppReq.length || decisions.length < 2 || doneDist < 6) return { label: "Pass track",        color: C.info    };
+        if (doneDist < 9  || decisions.length < 3)                             return { label: "Merit track",       color: C.warning };
+        return                                                                        { label: "Distinction track", color: C.gold    };
+      }
+      const grade = gradeEst();
+
+      // ── Shared styles ────────────────────────────────────────────────────────
+      const sx = {
+        card:    { background: C.white, border: `1px solid ${C.border}`, borderRadius: 12, marginBottom: 14, overflow: "hidden" },
+        cHead:   (accent) => ({ background: accent ? accent + "10" : C.surface, padding: "11px 16px", borderBottom: `1px solid ${C.border}`, borderLeft: accent ? `4px solid ${accent}` : "none" }),
+        row:     { display: "flex", alignItems: "flex-start", gap: 11, padding: "11px 16px", cursor: "pointer", transition: "background 0.1s" },
+        lbl:     { fontSize: 11, fontWeight: 700, color: C.grey, marginBottom: 4, display: "block", textTransform: "uppercase", letterSpacing: "0.5px" },
+        inp:     { width: "100%", padding: "9px 11px", fontSize: 13, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: "Trebuchet MS, sans-serif", boxSizing: "border-box", marginBottom: 10, outline: "none" },
+        txta:    { width: "100%", padding: "9px 11px", fontSize: 13, border: `1px solid ${C.border}`, borderRadius: 8, fontFamily: "Trebuchet MS, sans-serif", boxSizing: "border-box", marginBottom: 10, minHeight: 66, resize: "vertical", outline: "none" },
+        btn:     { background: C.purple, color: C.white, border: "none", borderRadius: 8, padding: "9px 20px", fontSize: 13, fontWeight: 700, cursor: "pointer", fontFamily: "Trebuchet MS, sans-serif" },
+        btnDanger: { background: C.dangerBg, color: C.danger, border: `1px solid ${C.danger}50`, borderRadius: 6, padding: "4px 11px", fontSize: 11, fontWeight: 600, cursor: "pointer", fontFamily: "Trebuchet MS, sans-serif" },
+        h2:      { fontSize: 14, fontWeight: 700, color: C.purple700, margin: "0 0 3px" },
+        sub:     { fontSize: 11, color: C.grey, margin: 0 },
+        infoBox: (color) => ({ background: color + "12", border: `1.5px solid ${color}35`, borderRadius: 10, padding: "12px 14px", marginBottom: 14 }),
+        mono:    { fontSize: 10, fontFamily: "monospace", color: C.grey, margin: "3px 0 0" },
+      };
+
+      // ─── OVERVIEW tab ──────────────────────────────────────────────────────
+      const Overview = () => (
+        <>
+          <div style={{ display: "flex", gap: 10, marginBottom: 14 }}>
+            <div style={{ flex: 1, background: grade.color + "12", border: `1.5px solid ${grade.color}35`, borderRadius: 12, padding: "13px 15px" }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: grade.color, margin: "0 0 3px", textTransform: "uppercase", letterSpacing: "0.6px" }}>Grade estimate</p>
+              <p style={{ fontSize: 19, fontWeight: 700, color: grade.color, margin: 0, lineHeight: 1.2 }}>{grade.label}</p>
+            </div>
+            <div style={{ background: daysLeft <= 14 ? C.dangerBg : C.infoBg, border: `1.5px solid ${daysLeft <= 14 ? C.danger : C.info}35`, borderRadius: 12, padding: "13px 15px", textAlign: "center" }}>
+              <p style={{ fontSize: 10, fontWeight: 700, color: C.grey, margin: "0 0 3px", textTransform: "uppercase", letterSpacing: "0.5px" }}>1 Apr deadline</p>
+              <p style={{ fontSize: 19, fontWeight: 700, color: daysLeft <= 14 ? C.danger : C.info, margin: 0, lineHeight: 1.2 }}>{daysLeft > 0 ? `${daysLeft}d` : "Passed"}</p>
+            </div>
+          </div>
+
+          <div style={{ ...sx.card, padding: "16px 10px" }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: C.grey, margin: "0 0 14px 6px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Progress at a glance</p>
+            <div style={{ display: "flex", justifyContent: "space-around", gap: 8, flexWrap: "wrap" }}>
+              {[
+                { label: "Session tasks", value: doneMs,   max: allMs.length,       color: C.info    },
+                { label: "TN milestones", value: doneTech,  max: allTech.length,     color: C.purple  },
+                { label: "Submission",    value: doneComp,  max: COMPONENTS.length,  color: C.success },
+                { label: "Distinction",   value: doneDist,  max: DISTINCTION.length, color: C.gold    },
+              ].map(r => (
+                <div key={r.label} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
+                  <MiniRing value={r.value} max={r.max} color={r.color} />
+                  <span style={{ fontSize: 10, color: C.grey, textAlign: "center", lineHeight: 1.3 }}>{r.label}<br />{r.value}/{r.max}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={sx.card}>
+            <div style={sx.cHead()}>
+              <p style={sx.h2}>Submission readiness check</p>
+            </div>
+            <div style={{ padding: "12px 16px" }}>
+              {[
+                { label: "Core components (required — missing any = Fail)", val: coreDone, max: coreReq.length, ok: coreDone === coreReq.length, okCol: C.success, failCol: C.danger },
+                { label: "Supporting components (required for Merit+)",     val: suppDone, max: suppReq.length, ok: suppDone === suppReq.length, okCol: C.success, failCol: C.warning },
+                { label: "AI override decisions logged (aim for 3–5)",      val: decisions.length, max: 5, ok: decisions.length >= 3, okCol: C.success, failCol: C.warning, suffix: decisions.length >= 3 ? " ✓" : " (need 3+)" },
+                { label: "Distinction criteria confirmed",                  val: doneDist, max: DISTINCTION.length, ok: doneDist >= 10, okCol: C.gold, failCol: C.warning },
+              ].map((r, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 0", borderBottom: i < 3 ? `1px solid ${C.grey200}` : "none" }}>
+                  <span style={{ fontSize: 12, color: C.ink, flex: 1, lineHeight: 1.4 }}>{r.label}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: r.ok ? r.okCol : r.failCol, marginLeft: 12, whiteSpace: "nowrap" }}>
+                    {r.val}{r.max !== 1 && `/${r.max}`}{r.suffix || ""}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ background: C.purple100, border: `1px solid ${C.purple200}`, borderRadius: 12, padding: "14px 15px" }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: C.purple700, margin: "0 0 9px", textTransform: "uppercase", letterSpacing: "0.5px" }}>Four things that earn a Distinction</p>
+            {[
+              "Your analysis must acknowledge its own limitations and assumptions.",
+              "Your proposal must have decision points: if X works → do Y; if it fails → do Z.",
+              "Your reflection must show specific moments where you overrode AI with insider knowledge.",
+              "At least one AI claim must be independently verified with real external evidence.",
+            ].map((t, i) => (
+              <div key={i} style={{ display: "flex", gap: 9, marginBottom: i < 3 ? 7 : 0 }}>
+                <span style={{ color: C.purple, fontSize: 13, lineHeight: 1.5, flexShrink: 0 }}>◆</span>
+                <span style={{ fontSize: 12, color: C.purple700, lineHeight: 1.55 }}>{t}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      );
+
+      // ─── SESSIONS tab ──────────────────────────────────────────────────────
+      const Sessions = () => (
+        <>
+          <p style={{ fontSize: 13, color: C.grey, margin: "0 0 14px", lineHeight: 1.5 }}>
+            Tap any milestone to mark it complete. Progress saves automatically.
+          </p>
+          {SESSIONS.map(s => {
+            const done = s.milestones.filter(m => msStatus[m.id]).length;
+            return (
+              <div key={s.id} style={sx.card}>
+                <div style={{ ...sx.cHead(s.color) }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div>
+                      <Pill label={s.title} color={s.color} />
+                      <p style={{ fontSize: 14, fontWeight: 700, color: C.ink, margin: "5px 0 1px" }}>{s.subtitle}</p>
+                      <p style={{ fontSize: 11, color: C.grey, margin: 0 }}>{s.date}</p>
+                    </div>
+                    <div style={{ textAlign: "right" }}>
+                      <p style={{ fontSize: 20, fontWeight: 700, color: s.color, margin: "0 0 1px" }}>
+                        {Math.round((done / s.milestones.length) * 100)}%
+                      </p>
+                      <p style={{ fontSize: 10, color: C.grey, margin: 0 }}>{done}/{s.milestones.length} done</p>
+                    </div>
+                  </div>
+                  <ProgressBar value={done} max={s.milestones.length} color={s.color} />
+                </div>
+                {s.milestones.map((m, i) => {
+                  const done = !!msStatus[m.id];
+                  return (
+                    <div key={m.id}
+                      style={{ ...sx.row, borderBottom: i < s.milestones.length - 1 ? `1px solid ${C.grey200}` : "none", background: done ? s.color + "08" : C.white }}
+                      onClick={() => toggleMs(m.id)}>
+                      <Tick checked={done} color={s.color} />
+                      <span style={{ fontSize: 13, color: done ? s.color : C.ink, textDecoration: done ? "line-through" : "none", lineHeight: 1.5, flex: 1 }}>
+                        {m.text}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </>
+      );
+
+      // ─── TECH NATIVE MILESTONES tab ────────────────────────────────────────
+      const TechMilestones = () => (
+        <>
+          <div style={sx.infoBox(C.info)}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: C.info, margin: "0 0 5px" }}>What these milestones mean for you</p>
+            <p style={{ fontSize: 12, color: C.ink, margin: 0, lineHeight: 1.65 }}>
+              <strong>Milestone 2</strong> is your bootcamp completion — the capstone project is your Assessment 2.
+              For the Employed/Co-funded route, completion requires your employer to offer you new responsibilities.<br />
+              <strong>Milestone 3</strong> is tracked <em>after</em> the course ends — it confirms you actually started those new responsibilities at Independent Lives.
+            </p>
+          </div>
+          {TECH_MILESTONES.map(tm => {
+            const done = tm.tasks.filter(t => techStatus[t.id]).length;
+            return (
+              <div key={tm.id} style={sx.card}>
+                <div style={{ ...sx.cHead(tm.color) }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", gap: 7, marginBottom: 5, flexWrap: "wrap" }}>
+                        <Pill label={tm.badge} color={tm.color} />
+                        {tm.urgent && <Pill label="Week 12 deadline" color={C.danger} />}
+                      </div>
+                      <p style={{ fontSize: 15, fontWeight: 700, color: C.ink, margin: "0 0 2px" }}>{tm.title}</p>
+                      <p style={{ fontSize: 11, color: C.grey, margin: "0 0 5px" }}>{tm.subtitle}</p>
+                      <p style={{ fontSize: 12, color: tm.color, margin: 0, fontStyle: "italic", lineHeight: 1.5 }}>{tm.description}</p>
+                    </div>
+                    <div style={{ textAlign: "right", paddingLeft: 12 }}>
+                      <p style={{ fontSize: 20, fontWeight: 700, color: tm.color, margin: "0 0 1px" }}>
+                        {Math.round((done / tm.tasks.length) * 100)}%
+                      </p>
+                      <p style={{ fontSize: 10, color: C.grey, margin: 0 }}>{done}/{tm.tasks.length}</p>
+                    </div>
+                  </div>
+                  <ProgressBar value={done} max={tm.tasks.length} color={tm.color} />
+                </div>
+                {tm.tasks.map((t, i) => {
+                  const done = !!techStatus[t.id];
+                  return (
+                    <div key={t.id}
+                      style={{ ...sx.row, borderBottom: i < tm.tasks.length - 1 ? `1px solid ${C.grey200}` : "none", background: done ? tm.color + "08" : C.white }}
+                      onClick={() => toggleTech(t.id)}>
+                      <Tick checked={done} color={tm.color} />
+                      <span style={{ fontSize: 13, color: done ? tm.color : C.ink, textDecoration: done ? "line-through" : "none", lineHeight: 1.5, flex: 1 }}>
+                        {t.text}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })}
+        </>
+      );
+
+      // ─── SUBMISSION tab ────────────────────────────────────────────────────
+      const Submission = () => {
+        const core = COMPONENTS.filter(c => c.required);
+        const supp = COMPONENTS.filter(c => !c.required);
+        const Section = ({ items, title, note }) => (
+          <div style={sx.card}>
+            <div style={sx.cHead()}>
+              <p style={sx.h2}>{title}</p>
+              <p style={sx.sub}>{note}</p>
+            </div>
+            {items.map((c, i) => {
+              const status = compStatus[c.id] || "Not started";
+              return (
+                <div key={c.id} style={{ padding: "12px 16px", borderBottom: i < items.length - 1 ? `1px solid ${C.grey200}` : "none", background: status === "Done" ? C.successBg : C.white }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap", marginBottom: 4 }}>
+                        <span style={{ fontSize: 13, fontWeight: 600, color: C.ink }}>{c.label}</span>
+                        {c.required && <Pill label="REQUIRED" color={C.danger} />}
+                      </div>
+                      <p style={{ fontSize: 11, color: C.grey, margin: "0 0 2px", lineHeight: 1.5 }}>{c.hint}</p>
+                      <p style={sx.mono}>{c.filename}</p>
+                    </div>
+                    <button
+                      style={{ background: STATUS_BG[status], color: STATUS_COLOR[status], border: `1px solid ${STATUS_BORDER[status]}`, borderRadius: 8, padding: "5px 12px", fontSize: 11, fontWeight: 700, cursor: "pointer", fontFamily: "Trebuchet MS, sans-serif", flexShrink: 0 }}
+                      onClick={() => cycleCom(c.id)}>
+                      {status}
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+
+        const cats = [...new Set(DISTINCTION.map(d => d.cat))];
+        return (
+          <>
+            <p style={{ fontSize: 13, color: C.grey, margin: "0 0 14px" }}>
+              Tap a status badge to cycle it: Not started → In progress → Done.
+            </p>
+            <Section items={core} title="Core components" note="All three must be submitted — missing any means a Fail." />
+            <Section items={supp} title="Supporting components" note="All four required for Merit or Distinction. Without all, maximum grade is Pass." />
+
+            <div style={sx.card}>
+              <div style={{ ...sx.cHead(C.gold) }}>
+                <p style={{ fontSize: 14, fontWeight: 700, color: C.gold, margin: "0 0 2px" }}>Distinction criteria checklist</p>
+                <p style={{ fontSize: 11, color: C.grey, margin: 0 }}>
+                  Tick each one only when you have genuine evidence in your submission — {doneDist}/{DISTINCTION.length} confirmed
+                </p>
+              </div>
+              {cats.map(cat => (
+                <div key={cat}>
+                  <div style={{ padding: "7px 16px 4px", background: C.grey100 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: C.grey, textTransform: "uppercase", letterSpacing: "0.6px" }}>{cat}</span>
+                  </div>
+                  {DISTINCTION.filter(d => d.cat === cat).map((d, i, arr) => {
+                    const done = !!distStatus[d.id];
+                    return (
+                      <div key={d.id}
+                        style={{ ...sx.row, borderBottom: i < arr.length - 1 ? `1px solid ${C.grey200}` : "none", background: done ? C.gold + "08" : C.white }}
+                        onClick={() => toggleDist(d.id)}>
+                        <Tick checked={done} color={C.gold} />
+                        <span style={{ fontSize: 12, color: done ? C.gold : C.ink, textDecoration: done ? "line-through" : "none", lineHeight: 1.5, flex: 1 }}>
+                          {d.text}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </>
+        );
+      };
+
+      // ─── DECISION LOG tab ──────────────────────────────────────────────────
+      const Decisions = () => (
+        <>
+          <div style={sx.infoBox(C.gold)}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: C.gold, margin: "0 0 5px" }}>
+              Why this tab earns you a Distinction
+            </p>
+            <p style={{ fontSize: 12, color: C.ink, margin: 0, lineHeight: 1.65 }}>
+              Every time you made a different call to what AI suggested, that's your insider knowledge at work.
+              Log it here and it becomes your "Where I overrode AI" reflection almost automatically.
+              You have <strong style={{ color: C.gold }}>{decisions.length}</strong> decision{decisions.length !== 1 ? "s" : ""} logged — aim for 3–5 strong ones.
+            </p>
+          </div>
+
+          <div style={sx.card}>
+            <div style={sx.cHead()}>
+              <p style={sx.h2}>Add a new decision</p>
+            </div>
+            <div style={{ padding: 16 }}>
+              <label style={sx.lbl}>Context — what were you working on?</label>
+              <input style={sx.inp} value={form.context}
+                onChange={e => setForm({ ...form, context: e.target.value })}
+                placeholder="e.g. Choosing the output format for LA 1's KPI report" />
+              <label style={sx.lbl}>What did AI suggest?</label>
+              <textarea style={sx.txta} value={form.aiSuggested}
+                onChange={e => setForm({ ...form, aiSuggested: e.target.value })}
+                placeholder="e.g. AI suggested building three separate dashboards, one per authority" />
+              <label style={sx.lbl}>What did you choose instead?</label>
+              <textarea style={sx.txta} value={form.iChose}
+                onChange={e => setForm({ ...form, iChose: e.target.value })}
+                placeholder="e.g. One filterable dataset with LA-specific conditional views" />
+              <label style={sx.lbl}>Why? — this is your insider knowledge, the most important part</label>
+              <textarea style={sx.txta} value={form.why}
+                onChange={e => setForm({ ...form, why: e.target.value })}
+                placeholder="e.g. The underlying data is identical — each council just frames its questions differently. Three dashboards would triple the maintenance burden as contracts evolve." />
+              <button style={sx.btn} onClick={addDecision}>Save decision</button>
+            </div>
+          </div>
+
+          {decisions.length === 0 && (
+            <div style={{ textAlign: "center", color: C.grey, fontSize: 13, padding: "28px 0" }}>
+              No decisions logged yet — add your first above.
+            </div>
+          )}
+
+          {decisions.map((d, idx) => (
+            <div key={d.id} style={sx.card}>
+              <div style={{ padding: "13px 16px", background: C.gold + "08", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}
+                onClick={() => setExpanded(expanded === d.id ? null : d.id)}>
+                <div style={{ flex: 1 }}>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: C.gold, marginRight: 8, textTransform: "uppercase", letterSpacing: "0.5px" }}>Decision {idx + 1}</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: C.ink }}>{d.context}</span>
+                </div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center", paddingLeft: 10 }}>
+                  <span style={{ fontSize: 10, color: C.grey, whiteSpace: "nowrap" }}>{d.date}</span>
+                  <span style={{ color: C.grey, fontSize: 13 }}>{expanded === d.id ? "▲" : "▼"}</span>
+                </div>
+              </div>
+              {expanded === d.id && (
+                <div style={{ padding: "14px 16px" }}>
+                  <label style={sx.lbl}>AI suggested</label>
+                  <div style={{ fontSize: 12, color: C.ink, lineHeight: 1.6, background: C.grey100, padding: "9px 11px", borderRadius: 7, marginBottom: 11 }}>
+                    {d.aiSuggested || "—"}
+                  </div>
+                  <label style={{ ...sx.lbl, color: C.success }}>I chose instead</label>
+                  <div style={{ fontSize: 12, color: C.success, fontWeight: 600, lineHeight: 1.6, background: C.successBg, padding: "9px 11px", borderRadius: 7, marginBottom: 11 }}>
+                    {d.iChose || "—"}
+                  </div>
+                  <label style={{ ...sx.lbl, color: C.purple700 }}>Because — insider knowledge</label>
+                  <div style={{ fontSize: 12, color: C.ink, lineHeight: 1.6, background: C.purple100, padding: "9px 11px", borderRadius: 7, marginBottom: 14 }}>
+                    {d.why || "—"}
+                  </div>
+                  <button style={sx.btnDanger} onClick={() => removeDecision(d.id)}>Remove</button>
+                </div>
+              )}
+            </div>
+          ))}
+        </>
+      );
+
+      // ─── Tab router ────────────────────────────────────────────────────────
+      const TABS = [
+        { id: "overview",   label: "Overview",      icon: "◎" },
+        { id: "sessions",   label: "Sessions",      icon: "✦" },
+        { id: "milestones", label: "TN Milestones", icon: "⬡" },
+        { id: "submission", label: "Submission",    icon: "⊞" },
+        { id: "decisions",  label: "Decision Log",  icon: "⟳" },
+      ];
+      const TabMap = { overview: Overview, sessions: Sessions, milestones: TechMilestones, submission: Submission, decisions: Decisions };
+      const ActiveTab = TabMap[tab];
+
+      return (
+        <div style={{ fontFamily: "Trebuchet MS, Trebuchet, Arial, sans-serif", color: C.ink, background: C.surface, minHeight: "100vh", paddingBottom: 60 }}>
+
+          {/* ── Header ── */}
+          <div style={{ background: `linear-gradient(135deg, #7d2e79 0%, ${C.purple700} 45%, ${C.purple} 100%)`, padding: "18px 18px 16px" }}>
+            <p style={{ fontSize: 11, color: C.purple200, margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.8px" }}>TechNative Academy 2026 · AI for Business</p>
+            <h1 style={{ fontSize: 19, fontWeight: 700, margin: "0 0 1px", color: C.white, letterSpacing: "-0.3px" }}>From Data Burden to Data Brilliance</h1>
+            <p style={{ fontSize: 12, color: C.purple200, margin: "0 0 14px" }}>Cherry Simmonds · Independent Lives</p>
+
+            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+              <Ring value={doneAll} max={totalAll} size={70} stroke={7} color={C.white} />
+              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                {[
+                  { val: `${doneMs}/${allMs.length}`,    lbl: "Session tasks"  },
+                  { val: `${doneTech}/${allTech.length}`, lbl: "TN milestones" },
+                  { val: decisions.length,                lbl: "AI overrides"  },
+                  { val: grade.label, lbl: "Est. grade", highlight: grade.color === C.gold },
+                ].map((s, i) => (
+                  <div key={i} style={{ background: "rgba(255,255,255,0.14)", borderRadius: 8, padding: "6px 11px", textAlign: "center", minWidth: 58 }}>
+                    <p style={{ fontSize: s.highlight ? 12 : 16, fontWeight: 700, color: s.highlight ? "#fcd34d" : C.white, margin: "0 0 1px", lineHeight: 1.2 }}>{s.val}</p>
+                    <p style={{ fontSize: 9, color: C.purple200, margin: 0, textTransform: "uppercase", letterSpacing: "0.4px" }}>{s.lbl}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {saving && <p style={{ fontSize: 10, color: C.purple200, margin: "8px 0 0", textAlign: "right" }}>Saving…</p>}
+          </div>
+
+          {/* ── Tab bar ── */}
+          <div style={{ display: "flex", background: C.white, borderBottom: `2px solid ${C.border}`, overflowX: "auto" }}>
+            {TABS.map(t => (
+              <button key={t.id}
+                style={{ flex: "0 0 auto", padding: "10px 13px", fontSize: 12, fontWeight: tab === t.id ? 700 : 500, color: tab === t.id ? C.purple700 : C.grey, borderBottom: tab === t.id ? `3px solid ${C.purple}` : "3px solid transparent", cursor: "pointer", background: "none", border: "none", outline: "none", marginBottom: -2, whiteSpace: "nowrap", display: "flex", gap: 5, alignItems: "center" }}
+                onClick={() => setTab(t.id)}>
+                <span style={{ fontSize: 11 }}>{t.icon}</span> {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* ── Content ── */}
+          <div style={{ padding: "16px 14px", maxWidth: 680, margin: "0 auto" }}>
+            <ActiveTab />
+          </div>
+        </div>
+      );
+    }
+
+    // Mount the app
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<CapstoneTracker />);
+  </script>
+</body>
+</html>
